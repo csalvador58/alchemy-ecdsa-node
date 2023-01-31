@@ -12,8 +12,8 @@ function Transfer({ address, privateKey, setBalance, setTransaction }) {
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
 
-   // nonce
-   const [nonce, setNonce] = useState(0);
+  // nonce
+  const [nonce, setNonce] = useState(0);
 
   async function transfer(evt) {
     evt.preventDefault();
@@ -25,37 +25,43 @@ function Transfer({ address, privateKey, setBalance, setTransaction }) {
     //   recipient,
     //   nonce: nonce,
     // };
-    const message = 'hello';
-    console.log(message)
-    const hashedMsg = keccak256(utf8ToBytes(JSON.stringify(message)));
-    
+    // const msgToString = JSON.stringify(message);
+
+    // console.log("From Transfer: " + msgToString);
+    // console.log(typeof msgToString)
+
+    console.log(recipient + sendAmount + JSON.stringify(nonce));
+    const hashedMsg = keccak256(
+      utf8ToBytes(recipient + sendAmount + JSON.stringify(nonce))
+    );
+
     // Sign message
     const signTxn = await secp.sign(hashedMsg, privateKey, {
       recovered: true,
     });
 
     try {
-        const {
-          data: { balance },
-        } = await server.post(`send`, {
-          sender: address,
-          amount: parseInt(sendAmount),
-          recipient,
-          nonce,
-          signTxn,
-        });
+      const {
+        data: { balance },
+      } = await server.post(`send`, {
+        sender: address,
+        amount: parseInt(sendAmount),
+        recipient,
+        nonce,
+        signTxn,
+      });
 
-        const dataTxn = {
-          time: new Date().toLocaleString(),
-          amount: parseInt(sendAmount),
-          sender: address,
-          recipient,
-          nonce: parseInt(nonce)
-        }
+      const dataTxn = {
+        time: new Date().toLocaleString(),
+        amount: parseInt(sendAmount),
+        sender: address,
+        recipient,
+        nonce: parseInt(nonce),
+      };
 
-      setTransaction(prevTransactions => [...prevTransactions, dataTxn]);
+      setTransaction((prevTransactions) => [...prevTransactions, dataTxn]);
       setBalance(balance);
-      setNonce(prevNonce => prevNonce + 1)
+      setNonce((prevNonce) => prevNonce + 1);
     } catch (ex) {
       alert(ex.response.data.message);
     }

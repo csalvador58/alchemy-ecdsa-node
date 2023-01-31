@@ -30,7 +30,6 @@ app.post('/send', async (req, res) => {
   setInitialBalance(sender);
   setInitialBalance(recipient);
 
-
   // Extract signature and recovery bit from signed transaction
   const [signature, recoveryBit] = signTxn;
 
@@ -40,12 +39,13 @@ app.post('/send', async (req, res) => {
   // Create massage hash
   // const message = {
   //   sender: address,
-  //   amount: parseInt(amount),
+  //   amount: parseInt(sendAmount),
   //   recipient,
   //   nonce: nonce,
   // };
-  const message = 'hello';
-  const hashedMsg = toHex(keccak256(utf8ToBytes(JSON.stringify(message))));
+  // const msgToString = JSON.stringify(message);
+  // console.log('From Index: ' + msgToString);
+  const hashedMsg = toHex(keccak256(utf8ToBytes(recipient + amount + JSON.stringify(nonce))));
 
   // recover public key
   const publicKey = await secp.recoverPublicKey(
@@ -64,15 +64,13 @@ app.post('/send', async (req, res) => {
   if (balances[sender] < amount) {
     res.status(400).send({ message: 'Not enough funds!' });
   } else if (sender == recipient) {
-    res
-      .status(400)
-      .send({
-        message: 'Wallet address incorrect, from and to cannot be the same!',
-      });
+    res.status(400).send({
+      message: 'Wallet address incorrect, from and to cannot be the same!',
+    });
   } else if (recipient && amount) {
     balances[sender] -= amount;
     balances[recipient] += amount;
-    res.send({ balance: balance[sender] });
+    res.send({ balance: balances[sender] });
   } else {
     res.status(400).send({ message: 'Something went wrong!' });
   }
