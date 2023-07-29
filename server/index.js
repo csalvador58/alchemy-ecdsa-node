@@ -7,19 +7,19 @@ app.use(cors());
 app.use(express.json());
 
 const balances = {
-  '025309630c7f131d3e9c063eacb152a2b65cdc01f60f575ba109ba55adb12fab62': 100,
-  '03ad2f809fd8a1c1ff7a166754b5ed2a01b29277e6f7c7b6b064596a44314cf985': 50,
-  '0343abb001e35e74fe0c51c7c35eccb816451c8936a653139ee6ef169460409f6e': 75,
+  '0xc20d9e8385bcb8e9ab6aef10af2e578ecb24b5d0': 100,
+  '0x9993a26e1400b9c234d8a9e826b9ebd307b37be2': 50,
+  '0x7fb143ff35ed9df5b0889895da4615c8b7f4ddb0': 75,
 };
 
-// Sample generated publicKey-privateKey pairs for MOCK TESTING ONLY - NOT FOR PRODUCTION USE
+// Sample generated wallet-privateKey pairs for MOCK TESTING ONLY - NOT FOR PRODUCTION USE
 const testAccounts = {
-  '025309630c7f131d3e9c063eacb152a2b65cdc01f60f575ba109ba55adb12fab62':
-    '9ce594e28b9865326ce945b3e21fa869a32a6d236788dc70a8c8845fdefed6a8',
-  '03ad2f809fd8a1c1ff7a166754b5ed2a01b29277e6f7c7b6b064596a44314cf985':
-    '9a1341bfc9f4887c18b3c47321e37b83fb520d2f467771d85dc826137c2f5f6c',
-  '0343abb001e35e74fe0c51c7c35eccb816451c8936a653139ee6ef169460409f6e':
-    'c4ecce8f994438bf2d3273053388ab6d3e981c3ead7f77809c6b9704812a8b8b',
+  '0xc20d9e8385bcb8e9ab6aef10af2e578ecb24b5d0':
+    '77772a19ea2e0b358c26b2ef2dd7d9ca95a168aea2069d03018f64d9439fb119',
+  '0x9993a26e1400b9c234d8a9e826b9ebd307b37be2':
+    'a1550c63ad528cf25344e5646a152d36ef3a20177b814cf82b90566d8e6d1de6',
+  '0x7fb143ff35ed9df5b0889895da4615c8b7f4ddb0':
+    '0ce8c19e92ac3f8f2740cf429044483e9d2f261470eedf4cb86b018fc79d15e5',
 };
 
 app.get('/accounts', (req, res) => {

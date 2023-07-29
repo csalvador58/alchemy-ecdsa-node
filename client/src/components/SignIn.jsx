@@ -1,39 +1,65 @@
-import { useState } from "react";
-import server from "../server";
-import { secp256k1 } from "ethereum-cryptography/secp256k1.js";
-import { toHex } from "ethereum-cryptography/utils.js";
+import { useState } from 'react';
+import server from '../server';
+import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
+import { toHex } from 'ethereum-cryptography/utils.js';
+import { keccak256 } from 'ethereum-cryptography/keccak';
 
-function SignIn({ address, setAddress, balance, setBalance }) {
-    const [privateKeyInput, setPrivateKeyInput] = useState('')
-  const onChange = async (evt) => {
-    const input = evt.target.value;
-    setPrivateKeyInput(input);
-  }
+function SignIn({ address, setAddress, setBalance }) {
+  const [privateKeyInput, setPrivateKeyInput] = useState('');
+
+  const setValue = (setter) => (evt) => setter(evt.target.value);
 
   const submitHandler = async () => {
-    const publicKey = toHex(secp256k1.getPublicKey(privateKeyInput));
-    console.log('publicKey')
-    console.log(publicKey)
-    if (publicKey) {
+    if (privateKeyInput.length != 64) {
+      alert('Invalid Private Key, please try again!');
+      setPrivateKeyInput('');
+      return;
+    }
+
+    const publicKey = secp256k1.getPublicKey(privateKeyInput);
+    const walletAddress = '0x'.concat(
+      toHex(keccak256(publicKey.slice(1)).slice(-20))
+    );
+    if (walletAddress) {
       const {
         data: { balance },
-      } = await server.get(`balance/${publicKey}`);
+      } = await server.get(`balance/${walletAddress}`);
       setBalance(balance);
-      setAddress(publicKey);
+      setAddress(walletAddress);
     } else {
       setBalance(0);
     }
-  }
+  };
+
+  const logoutHandler = () => {
+    setBalance(0);
+    setAddress('');
+    setPrivateKeyInput('');
+  };
 
   return (
-    <div className="container wallet">
+    <div className='container wallet'>
       <h1>Sign In With Private Key</h1>
 
       <label>
         Private Key
-        <input placeholder="Type in private key" value={privateKeyInput} onChange={onChange}></input>
+        <input
+          disabled={address}
+          placeholder='Type in private key'
+          value={privateKeyInput}
+          onChange={setValue(setPrivateKeyInput)}
+        ></input>
       </label>
-      <button onClick={submitHandler}>Submit</button>
+      {!address && (
+        <button className='button' onClick={submitHandler}>
+          Login
+        </button>
+      )}
+      {address && (
+        <button className='button logout' onClick={logoutHandler}>
+          Logout
+        </button>
+      )}
     </div>
   );
 }

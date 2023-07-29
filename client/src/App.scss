@@ -64,6 +64,10 @@ input {
   }
 }
 
+.button.logout {
+  background-color: rgb(68, 49, 151);
+}
+
 .wallet {
   display: flex;
   flex-direction: column;

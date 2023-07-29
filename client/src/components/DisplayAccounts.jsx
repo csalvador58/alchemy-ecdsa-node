@@ -19,17 +19,18 @@ export const DisplayAccounts = () => {
 
   return (
     <div className='container'>
-      <h1>(***For Quick Viewing Only***) Accounts Available: </h1>
+      <h1>Accounts Available: </h1>
+      <h2>(***For Quick Viewing Only***) </h2>
       <ul>
         {Object.entries(accounts).map((account, index) => {
             const [pubKey, privKey] = account;
           return (
             <li key={index}>
               <p>
-                Account#: {pubKey}
+                <b>Wallet:</b> {pubKey}
                 </p>
               <p>
-                Key#: {privKey}
+                <b>Key:</b> {privKey}
                 </p>
             </li>
           );

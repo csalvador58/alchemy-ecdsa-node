@@ -11,13 +11,13 @@ function App() {
 
   return (
     <div className='app'>
-      <SignIn setBalance={setBalance} setAddress={setAddress}/>
+      <SignIn setBalance={setBalance} setAddress={setAddress} address={address}/>
       <Wallet
         balance={balance}
         address={address}
       />
       <Transfer setBalance={setBalance} address={address} />
-      <DisplayAccounts />
+      <DisplayAccounts/>
     </div>
   );
 }
