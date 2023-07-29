@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import server from '../server';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
-import { toHex } from 'ethereum-cryptography/utils.js';
+import { hexToBytes, toHex, utf8ToBytes } from "ethereum-cryptography/utils.js";
 import { keccak256 } from 'ethereum-cryptography/keccak';
 
 function SignIn({ address, setAddress, setBalance }) {
@@ -45,6 +45,7 @@ function SignIn({ address, setAddress, setBalance }) {
         Private Key
         <input
           disabled={address}
+          type='password'
           placeholder='Type in private key'
           value={privateKeyInput}
           onChange={setValue(setPrivateKeyInput)}

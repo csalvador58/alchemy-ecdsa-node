@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import server from '../server';
+import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
+import { hexToBytes, toHex, utf8ToBytes } from 'ethereum-cryptography/utils.js';
+import { sha256 } from 'ethereum-cryptography/sha256.js';
+import { keccak256 } from 'ethereum-cryptography/keccak';
 
-function Transfer({ address, setBalance }) {
-  const [sendAmount, setSendAmount] = useState('');
-  const [recipient, setRecipient] = useState('');
+function Transfer({
+  address,
+  recipient,
+  sendAmount,
+  setBalance,
+  setRecipient,
+  setSendAmount,
+}) {
   const [requestSign, setRequestSign] = useState(false);
   const [privateKeyInput, setPrivateKeyInput] = useState('');
 
@@ -12,8 +21,6 @@ function Transfer({ address, setBalance }) {
   const submitHandler = (evt) => {
     evt.preventDefault();
 
-    console.log('sendAmount');
-    console.log(sendAmount.trim().length);
     if (isNaN(sendAmount) || sendAmount.trim().length == 0) {
       alert('Invalid amount!');
       setSendAmount('');
@@ -38,26 +45,48 @@ function Transfer({ address, setBalance }) {
   };
 
   const signTxHandler = async () => {
-    console.log('address');
-    console.log(address);
+    if (privateKeyInput.length != 64) {
+      alert('Invalid Private Key, please try again!');
+      setPrivateKeyInput('');
+      return;
+    }
+    console.log('privateKeyInput');
+    console.log(privateKeyInput);
 
-    console.log('recipient');
-    console.log(recipient);
-    console.log('recipient.length');
-    console.log(recipient.length);
+    try {
+      const message = {
+        amount: sendAmount,
+        recipient: recipient,
+        sender: address,
+      };
 
-    // try {
-    //   const {
-    //     data: { balance },
-    //   } = await server.post(`send`, {
-    //     sender: address,
-    //     amount: parseInt(sendAmount),
-    //     recipient,
-    //   });
-    //   setBalance(balance);
-    // } catch (ex) {
-    //   alert(ex.response.data.message);
-    // }
+      console.log('message');
+      console.log(message);
+      const messageHash = sha256(utf8ToBytes(JSON.stringify(message)));
+      const publicKey = secp256k1.getPublicKey(privateKeyInput);
+      const signature = secp256k1.sign(messageHash, privateKeyInput);
+      const signatureStr = JSON.stringify({
+        r: signature.r.toString(),
+        s: signature.s.toString(),
+        recovery: signature.recovery,
+      });
+      console.log('signatureStr');
+      console.log(signatureStr);
+      // const isSigned = secp256k1.verify(signature, messageHash, publicKey);
+
+      const {
+        data: { balance },
+      } = await server.post(`send`, {
+        ...message,
+        publicKey,
+        signatureStr,
+      });
+      setBalance(balance);
+      alert('Transaction Successful!');
+    } catch (ex) {
+      console.error(ex.message);
+      // alert(ex.response.data.message);
+    }
   };
 
   const clearHandler = () => {
@@ -103,6 +132,7 @@ function Transfer({ address, setBalance }) {
           <label>
             Private Key
             <input
+              type='password'
               placeholder='Type in private key'
               value={privateKeyInput}
               onChange={setValue(setPrivateKeyInput)}

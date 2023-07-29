@@ -1,6 +1,10 @@
 import express from 'express';
 const app = express();
 import cors from 'cors';
+import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
+import { hexToBytes, toHex, utf8ToBytes } from 'ethereum-cryptography/utils.js';
+import { sha256 } from 'ethereum-cryptography/sha256.js';
+import { keccak256 } from 'ethereum-cryptography/keccak';
 const port = 3042;
 
 app.use(cors());
@@ -33,18 +37,65 @@ app.get('/balance/:address', (req, res) => {
 });
 
 app.post('/send', (req, res) => {
-  const { sender, recipient, amount } = req.body;
+  const { sender, recipient, amount, publicKey, signatureStr } = req.body;
+  // console.log('sender')
+  // console.log(sender)
+  // console.log('recipient')
+  // console.log(recipient)
+  // console.log('amount')
+  // console.log(amount)
+  console.log('publicKey');
+  console.log(publicKey);
+  console.log('JSON.parse(publicKey)');
+  console.log(utf8ToBytes(JSON.stringify(publicKey)));
+  // console.log('signatureStr')
+  // console.log(signatureStr)
+  // console.log('JSON.parse(signatureStr)')
+  // console.log(JSON.parse(signatureStr))
+  const signatureObj = JSON.parse(signatureStr);
 
-  setInitialBalance(sender);
-  setInitialBalance(recipient);
+  const signature = {
+    r: BigInt(signatureObj.r),
+    s: BigInt(signatureObj.s),
+    recovery: signatureObj.recovery,
+  };
 
-  if (balances[sender] < amount) {
-    res.status(400).send({ message: 'Not enough funds!' });
-  } else {
-    balances[sender] -= amount;
-    balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
-  }
+  // console.log('signature');
+  // console.log(signature);
+
+  const message = {
+    amount: amount,
+    recipient: recipient,
+    sender: sender,
+  };
+  console.log('message - backend');
+  console.log(message);
+  const messageHash = sha256(utf8ToBytes(String(message)));
+
+  const isSigned = secp256k1.verify(
+    signature,
+    messageHash,
+    utf8ToBytes(String(publicKey))
+  );
+
+  console.log('isSigned');
+  console.log(isSigned);
+
+  // if (isSigned) {
+  //   setInitialBalance(sender);
+  //   setInitialBalance(recipient);
+
+  //   if (balances[sender] < amount) {
+  //     res.status(400).send({ message: 'Not enough funds!' });
+  //   } else {
+  //     balances[sender] -= parseInt(amount);
+  //     balances[recipient] += parseInt(amount);
+  //     res.send({ balance: balances[sender] });
+  //   }
+  // } else {
+  //   res.status(400).send({ message: "Invalid signature!" });
+  // }
+  res.sendStatus(200);
 });
 
 app.listen(port, () => {

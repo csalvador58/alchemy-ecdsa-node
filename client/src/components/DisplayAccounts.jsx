@@ -19,7 +19,7 @@ export const DisplayAccounts = () => {
 
   return (
     <div className='container'>
-      <h1>Accounts Available: </h1>
+      <h1>Accounts Available with Test Balances: </h1>
       <h2>(***For Quick Viewing Only***) </h2>
       <ul>
         {Object.entries(accounts).map((account, index) => {
