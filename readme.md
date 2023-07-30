@@ -112,6 +112,9 @@ This week 1 project was created during Alchemy University - Ethereum Developer p
 Project highlights:
 
 - Generating a private-public key pair.
+- Frontend UI contained a mock wallet for initial login.
+- After an amount and recipient is entered, a sign transaction prompt is requested which runs some validations before the transaction is process.
+- The server demos the use of storing random transactions IDs to prevent a replay of the sign transactions. The IDs are included in the generation of the hashed message which is then used in the sign message verification phase on the server.
 - Creating a wallet address similar to an Ethereum wallet format.
 - Applied use of Ethereum-related cryptographic primitives from the ethereum-cryptography library.
 - Incorporate Public Key Cryptography in demonstration of transfers between wallet addresses.
