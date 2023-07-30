@@ -4,6 +4,7 @@ import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
 import { hexToBytes, toHex, utf8ToBytes } from 'ethereum-cryptography/utils.js';
 import { sha256 } from 'ethereum-cryptography/sha256.js';
 import { keccak256 } from 'ethereum-cryptography/keccak';
+import { getRandomBytesSync } from 'ethereum-cryptography/random.js';
 
 function Transfer({
   address,
@@ -50,41 +51,42 @@ function Transfer({
       setPrivateKeyInput('');
       return;
     }
-    console.log('privateKeyInput');
-    console.log(privateKeyInput);
 
     try {
+      // create random id
+      const transactionID = toHex(sha256(getRandomBytesSync(32)));
+
       const message = {
         amount: sendAmount,
         recipient: recipient,
         sender: address,
+        transactionID,
       };
-
-      console.log('message');
-      console.log(message);
       const messageHash = sha256(utf8ToBytes(JSON.stringify(message)));
       const publicKey = secp256k1.getPublicKey(privateKeyInput);
       const signature = secp256k1.sign(messageHash, privateKeyInput);
-      const signatureStr = JSON.stringify({
+
+      // Convert BigInt types in signature to string for JSON handling
+      const signatureStr = {
         r: signature.r.toString(),
         s: signature.s.toString(),
         recovery: signature.recovery,
-      });
-      console.log('signatureStr');
-      console.log(signatureStr);
-      // const isSigned = secp256k1.verify(signature, messageHash, publicKey);
+      };
 
-      const {
-        data: { balance },
-      } = await server.post(`send`, {
+      const response = await server.post(`send`, {
         ...message,
-        publicKey,
+        publicKey: JSON.stringify(publicKey),
         signatureStr,
+        transactionID,
       });
+
+      const { balance } = response.data;
       setBalance(balance);
       alert('Transaction Successful!');
     } catch (ex) {
+      alert(`Transaction Error: ${ex.response.data.message}`);
       console.error(ex.message);
+      clearHandler();
       // alert(ex.response.data.message);
     }
   };

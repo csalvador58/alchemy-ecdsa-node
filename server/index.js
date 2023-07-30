@@ -26,6 +26,8 @@ const testAccounts = {
     '0ce8c19e92ac3f8f2740cf429044483e9d2f261470eedf4cb86b018fc79d15e5',
 };
 
+const transactions = [];
+
 app.get('/accounts', (req, res) => {
   res.json({ testAccounts });
 });
@@ -37,65 +39,55 @@ app.get('/balance/:address', (req, res) => {
 });
 
 app.post('/send', (req, res) => {
-  const { sender, recipient, amount, publicKey, signatureStr } = req.body;
-  // console.log('sender')
-  // console.log(sender)
-  // console.log('recipient')
-  // console.log(recipient)
-  // console.log('amount')
-  // console.log(amount)
-  console.log('publicKey');
-  console.log(publicKey);
-  console.log('JSON.parse(publicKey)');
-  console.log(utf8ToBytes(JSON.stringify(publicKey)));
-  // console.log('signatureStr')
-  // console.log(signatureStr)
-  // console.log('JSON.parse(signatureStr)')
-  // console.log(JSON.parse(signatureStr))
-  const signatureObj = JSON.parse(signatureStr);
+  const { sender, recipient, amount, publicKey, signatureStr, transactionID } =
+    req.body;
 
+  // Convert signature back to original type
   const signature = {
-    r: BigInt(signatureObj.r),
-    s: BigInt(signatureObj.s),
-    recovery: signatureObj.recovery,
+    r: BigInt(signatureStr.r),
+    s: BigInt(signatureStr.s),
+    recovery: signatureStr.recovery,
   };
 
-  // console.log('signature');
-  // console.log(signature);
-
+  // Hash msg for verification with signature
   const message = {
     amount: amount,
     recipient: recipient,
     sender: sender,
+    transactionID: transactionID,
   };
-  console.log('message - backend');
-  console.log(message);
-  const messageHash = sha256(utf8ToBytes(String(message)));
 
-  const isSigned = secp256k1.verify(
-    signature,
-    messageHash,
-    utf8ToBytes(String(publicKey))
-  );
+  const messageHash = sha256(utf8ToBytes(JSON.stringify(message)));
 
-  console.log('isSigned');
-  console.log(isSigned);
+  // Convert public key back to original UInt8Array type
+  const pbKey = new Uint8Array(Object.values(JSON.parse(publicKey)));
 
-  // if (isSigned) {
-  //   setInitialBalance(sender);
-  //   setInitialBalance(recipient);
+  // Verify signed tx
+  const isSigned = secp256k1.verify(signature, messageHash, pbKey);
 
-  //   if (balances[sender] < amount) {
-  //     res.status(400).send({ message: 'Not enough funds!' });
-  //   } else {
-  //     balances[sender] -= parseInt(amount);
-  //     balances[recipient] += parseInt(amount);
-  //     res.send({ balance: balances[sender] });
-  //   }
-  // } else {
-  //   res.status(400).send({ message: "Invalid signature!" });
-  // }
-  res.sendStatus(200);
+  if (isSigned) {
+    if (transactions.includes(transactionID)) {
+      return res
+        .status(400)
+        .send({ message: 'Transaction already processed!' });
+    }
+    // Store tx ID to mark as processed to prevent replay of sign transaction
+    transactions.push(transactionID);
+
+    setInitialBalance(sender);
+    setInitialBalance(recipient);
+
+    if (balances[sender] < amount) {
+      return res.status(400).send({ message: 'Not enough funds!' });
+    } else {
+      balances[sender] -= parseInt(amount);
+      balances[recipient] += parseInt(amount);
+
+      return res.send({ balance: balances[sender] });
+    }
+  } else {
+    return res.status(400).send({ message: 'Invalid signature!' });
+  }
 });
 
 app.listen(port, () => {
