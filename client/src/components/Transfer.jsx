@@ -52,9 +52,24 @@ function Transfer({
       return;
     }
 
+    const publicKey = secp256k1.getPublicKey(privateKeyInput);
+    const walletAddress = '0x'.concat(
+      toHex(keccak256(publicKey.slice(1)).slice(-20))
+    );
+
+    if (walletAddress !== address) {
+      alert(
+        'Transaction Failed: Signature key does not match logged in wallet!'
+      );
+      clearHandler();
+      return;
+    }
+
     try {
       // create random id
       const transactionID = toHex(sha256(getRandomBytesSync(32)));
+      // Used to test with a static tx ID
+      // const transactionID = toHex(utf8ToBytes('Test-only'));
 
       const message = {
         amount: sendAmount,
@@ -83,17 +98,18 @@ function Transfer({
       const { balance } = response.data;
       setBalance(balance);
       alert('Transaction Successful!');
+      clearHandler();
     } catch (ex) {
-      alert(`Transaction Error: ${ex.response.data.message}`);
+      alert(`Transaction Failed: ${ex.response.data.message}`);
       console.error(ex.message);
       clearHandler();
-      // alert(ex.response.data.message);
     }
   };
 
   const clearHandler = () => {
     setSendAmount('');
     setRecipient('');
+    setPrivateKeyInput('');
     setRequestSign(false);
   };
 
